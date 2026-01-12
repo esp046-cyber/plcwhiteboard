@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLC Whiteboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: #1a1a1a;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 1%;
+            gap: 1%;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn.active {
+            background: #3b82f6;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 6px;
+        }
+
+        .color-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .color-btn:active {
+            transform: scale(0.9);
+        }
+
+        .color-btn.active {
+            border-color: #fff;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .slider {
+            width: 80px;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .theme-light { background: #ffffff; }
+        .theme-dark { background: #1e1e1e; }
+        .theme-grid-light { background: #ffffff; background-image: linear-gradient(rgba(0,0,0,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.05) 1px, transparent 1px); background-size: 20px 20px; }
+        .theme-grid-dark { background: #1e1e1e; background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 20px 20px; }
+        .theme-chalkboard { background: #2d5016; }
+        .theme-blueprint { background: #0c3c60; }
+
+        .label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-right: 4px;
+        }
+
+        .icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        .plc-toolbar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .plc-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .plc-icon:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .plc-icon:active {
+            transform: scale(0.95);
+        }
+
+        .plc-icon.active {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .plc-icon svg {
+            width: 28px;
+            height: 28px;
+            stroke: #fff;
+            fill: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M9 3v18M3 9h18M3 15h18"/>
+                </svg>
+                PLC WHITEBOARD 2026
+            </div>
+            <div class="controls">
+                <button class="btn" id="clearBtn">Clear</button>
+                <button class="btn" id="undoBtn">Undo</button>
+                <button class="btn" id="saveBtn">Save</button>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="tool-group">
+                <button class="btn active" id="penBtn">Pen</button>
+                <button class="btn" id="eraserBtn">Eraser</button>
+                <button class="btn" id="lineBtn">Line</button>
+                <button class="btn" id="textBtn">Text</button>
+            </div>
+
+            <div class="tool-group">
+                <span class="label">Size</span>
+                <input type="range" class="slider" min="1" max="20" value="3" id="sizeSlider">
+            </div>
+
+            <div class="color-picker" id="colorPicker">
+                <div class="color-btn active" style="background: #000;" data-color="#000"></div>
+                <div class="color-btn" style="background: #3b82f6;" data-color="#3b82f6"></div>
+                <div class="color-btn" style="background: #ef4444;" data-color="#ef4444"></div>
+                <div class="color-btn" style="background: #10b981;" data-color="#10b981"></div>
+                <div class="color-btn" style="background: #f59e0b;" data-color="#f59e0b"></div>
+                <div class="color-btn" style="background: #8b5cf6;" data-color="#8b5cf6"></div>
+            </div>
+
+            <select class="btn" id="themeSelect">
+                <option value="theme-light">Light</option>
+                <option value="theme-dark">Dark</option>
+                <option value="theme-grid-light">Grid Light</option>
+                <option value="theme-grid-dark">Grid Dark</option>
+                <option value="theme-chalkboard">Chalkboard</option>
+                <option value="theme-blueprint">Blueprint</option>
+            </select>
+        </div>
+
+        <div class="plc-toolbar" id="plcToolbar">
+            <div class="plc-icon" data-symbol="no" title="Normally Open">
+                <svg viewBox="0 0 60 40" stroke-width="2.5">
+                    <line x1="0" y1="20" x2="20" y2="20"/>
+                    <line x1="20" y1="5" x2="20" y2="35"/>
+                    <line x1="25" y1="5" x2="25" y2="35"/>
+                    <line x1="25" y1="20" x2="60" y2="20"/>
+                </svg>
+            </div>
+            <div class="plc-icon" data-symbol="nc" title="Normally Closed">
+                <svg viewBox="0 0 60 40" stroke-width="2.5">
+                    <line x1="0" y1="20" x2="20" y2="20"/>
+                    <line x1="20" y1="5" x2="20" y2="35"/>
+                    <line x1="25" y1="5" x2="25" y2="35"/>
+                    <line x1="20" y1="20" x2="25" y2="20"/>
+                    <line x1="25" y1="20" x2="60" y2="20"/>
+                </svg>
+            </div>
+            <div class="plc-icon" data-symbol="coil" title="Output Coil">
+                <svg viewBox="0 0 60 40" stroke-width="2.5">
+                    <line x1="0" y1="20" x2="20" y2="20"/>
+                    <circle cx="30" cy="20" r="10"/>
+                    <line x1="40" y1="20" x2="60" y2="20"/>
+                </svg>
+            </div>
+            <div class="plc-icon" data-symbol="timer" title="Timer">
+                <svg viewBox="0 0 60 40" stroke-width="2.5">
+                    <line x1="0" y1="20" x2="15" y2="20"/>
+                    <rect x="15" y="8" width="30" height="24" rx="2"/>
+                    <text x="30" y="25" fill="#fff" font-size="14" text-anchor="middle">T</text>
+                    <line x1="45" y1="20" x2="60" y2="20"/>
+                </svg>
+            </div>
+            <div class="plc-icon" data-symbol="counter" title="Counter">
+                <svg viewBox="0 0 60 40" stroke-width="2.5">
+                    <line x1="0" y1="20" x2="15" y2="20"/>
+                    <rect x="15" y="8" width="30" height="24" rx="2"/>
+                    <text x="30" y="25" fill="#fff" font-size="14" text-anchor="middle">C</text>
+                    <line x1="45" y1="20" x2="60" y2="20"/>
+                </svg>
+            </div>
+            <div class="plc-icon" data-symbol="relay" title="Relay">
+                <svg viewBox="0 0 60 40" stroke-width="2.5">
+                    <line x1="0" y1="20" x2="20" y2="20"/>
+                    <rect x="20" y="10" width="20" height="20"/>
+                    <line x1="40" y1="20" x2="60" y2="20"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="canvas-container theme-light" id="canvasContainer">
+            <canvas id="whiteboard"></canvas>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const canvas = document.getElementById('whiteboard');
+            const ctx = canvas.getContext('2d');
+            const container = document.getElementById('canvasContainer');
+
+            let isDrawing = false;
+            let currentColor = '#000';
+            let currentSize = 3;
+            let currentTool = 'pen';
+            let history = [];
+            let symbolMode = null;
+            let lineStart = null;
+
+            function resizeCanvas() {
+                const rect = container.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
+
+            function startDrawing(e) {
+                e.preventDefault();
+                const pos = getPos(e);
+                
+                if (symbolMode) {
+                    drawSymbol(symbolMode, pos.x, pos.y);
+                    saveState();
+                    return;
+                }
+                
+                if (currentTool === 'line') {
+                    if (!lineStart) {
+                        lineStart = pos;
+                        saveState();
+                    } else {
+                        ctx.strokeStyle = currentColor;
+                        ctx.lineWidth = currentSize;
+                        ctx.lineCap = 'round';
+                        ctx.globalCompositeOperation = 'source-over';
+                        ctx.beginPath();
+                        ctx.moveTo(lineStart.x, lineStart.y);
+                        ctx.lineTo(pos.x, pos.y);
+                        ctx.stroke();
+                        lineStart = null;
+                        saveState();
+                    }
+                    return;
+                }
+                
+                if (currentTool === 'text') {
+                    const text = prompt('Enter text:');
+                    if (text) {
+                        ctx.fillStyle = currentColor;
+                        ctx.font = (currentSize * 6) + 'px monospace';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(text, pos.x, pos.y);
+                        saveState();
+                    }
+                    return;
+                }
+                
+                isDrawing = true;
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+            }
+
+            function draw(e) {
+                e.preventDefault();
+                const pos = getPos(e);
+                
+                if (currentTool === 'line' && lineStart) {
+                    redrawCanvas();
+                    ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
+                    ctx.lineWidth = currentSize;
+                    ctx.lineCap = 'round';
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.beginPath();
+                    ctx.moveTo(lineStart.x, lineStart.y);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                    return;
+                }
+                
+                if (!isDrawing || symbolMode || currentTool === 'text') {
+                    return;
+                }
+                
+                ctx.lineWidth = currentSize;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                if (currentTool === 'eraser') {
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.strokeStyle = 'rgba(0,0,0,1)';
+                } else {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = currentColor;
+                }
+                
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            }
+
+            function stopDrawing() {
+                if (isDrawing) {
+                    isDrawing = false;
+                    saveState();
+                }
+            }
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
+            canvas.addEventListener('touchstart', startDrawing);
+            canvas.addEventListener('touchmove', draw);
+            canvas.addEventListener('touchend', stopDrawing);
+
+            document.getElementById('penBtn').addEventListener('click', function() {
+                setTool('pen');
+            });
+
+            document.getElementById('eraserBtn').addEventListener('click', function() {
+                setTool('eraser');
+            });
+
+            document.getElementById('lineBtn').addEventListener('click', function() {
+                setTool('line');
+            });
+
+            document.getElementById('textBtn').addEventListener('click', function() {
+                setTool('text');
+            });
+
+            document.getElementById('clearBtn').addEventListener('click', function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                history = [];
+            });
+
+            document.getElementById('undoBtn').addEventListener('click', function() {
+                if (history.length > 0) {
+                    history.pop();
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    if (history.length > 0) {
+                        const img = new Image();
+                        img.onload = function() {
+                            ctx.drawImage(img, 0, 0);
+                        };
+                        img.src = history[history.length - 1];
+                    }
+                }
+            });
+
+            document.getElementById('saveBtn').addEventListener('click', function() {
+                const link = document.createElement('a');
+                link.download = 'plc-whiteboard.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+
+            document.getElementById('sizeSlider').addEventListener('input', function(e) {
+                currentSize = parseInt(e.target.value);
+            });
+
+            document.getElementById('themeSelect').addEventListener('change', function(e) {
+                container.className = 'canvas-container ' + e.target.value;
+            });
+
+            const colorBtns = document.querySelectorAll('.color-btn');
+            colorBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    currentColor = this.getAttribute('data-color');
+                    colorBtns.forEach(function(b) {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    setTool('pen');
+                });
+            });
+
+            const plcIcons = document.querySelectorAll('.plc-icon');
+            plcIcons.forEach(function(icon) {
+                icon.addEventListener('click', function() {
+                    symbolMode = this.getAttribute('data-symbol');
+                    plcIcons.forEach(function(i) {
+                        i.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    canvas.style.cursor = 'crosshair';
+                    document.querySelectorAll('.toolbar .btn').forEach(function(btn) {
+                        btn.classList.remove('active');
+                    });
+                });
+            });
+
+            function setTool(tool) {
+                currentTool = tool;
+                symbolMode = null;
+                lineStart = null;
+                
+                document.getElementById('penBtn').classList.remove('active');
+                document.getElementById('eraserBtn').classList.remove('active');
+                document.getElementById('lineBtn').classList.remove('active');
+                document.getElementById('textBtn').classList.remove('active');
+                
+                if (tool === 'pen') document.getElementById('penBtn').classList.add('active');
+                if (tool === 'eraser') document.getElementById('eraserBtn').classList.add('active');
+                if (tool === 'line') document.getElementById('lineBtn').classList.add('active');
+                if (tool === 'text') document.getElementById('textBtn').classList.add('active');
+                
+                plcIcons.forEach(function(icon) {
+                    icon.classList.remove('active');
+                });
+                
+                if (tool === 'eraser') {
+                    canvas.style.cursor = 'cell';
+                } else if (tool === 'text') {
+                    canvas.style.cursor = 'text';
+                } else {
+                    canvas.style.cursor = 'crosshair';
+                }
+            }
+
+            function saveState() {
+                history.push(canvas.toDataURL());
+                if (history.length > 20) {
+                    history.shift();
+                }
+            }
+
+            function redrawCanvas() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (history.length > 0) {
+                    const img = new Image();
+                    img.src = history[history.length - 1];
+                    ctx.drawImage(img, 0, 0);
+                }
+            }
+
+            function drawSymbol(type, x, y) {
+                ctx.globalCompositeOperation = 'source-over';
+                
+                if (type === 'no') drawNormallyOpen(x, y);
+                else if (type === 'nc') drawNormallyClosed(x, y);
+                else if (type === 'coil') drawCoil(x, y);
+                else if (type === 'timer') drawTimer(x, y);
+                else if (type === 'counter') drawCounter(x, y);
+                else if (type === 'relay') drawRelay(x, y);
+            }
+
+            function drawNormallyOpen(x, y) {
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x - 30, y);
+                ctx.lineTo(x - 10, y);
+                ctx.moveTo(x - 10, y - 15);
+                ctx.lineTo(x - 10, y + 15);
+                ctx.moveTo(x + 10, y - 15);
+                ctx.lineTo(x + 10, y + 15);
+                ctx.moveTo(x + 10, y);
+                ctx.lineTo(x + 30, y);
+                ctx.stroke();
+            }
+
+            function drawNormallyClosed(x, y) {
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x - 30, y);
+                ctx.lineTo(x - 10, y);
+                ctx.moveTo(x - 10, y - 15);
+                ctx.lineTo(x - 10, y + 15);
+                ctx.moveTo(x + 10, y - 15);
+                ctx.lineTo(x + 10, y + 15);
+                ctx.moveTo(x - 10, y);
+                ctx.lineTo(x + 10, y);
+                ctx.moveTo(x + 10, y);
+                ctx.lineTo(x + 30, y);
+                ctx.stroke();
+            }
+
+            function drawCoil(x, y) {
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x - 30, y);
+                ctx.lineTo(x - 15, y);
+                ctx.arc(x, y, 15, 0, Math.PI * 2);
+                ctx.moveTo(x + 15, y);
+                ctx.lineTo(x + 30, y);
+                ctx.stroke();
+            }
+
+            function drawTimer(x, y) {
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x - 40, y);
+                ctx.lineTo(x - 25, y);
+                ctx.rect(x - 25, y - 15, 50, 30);
+                ctx.moveTo(x + 25, y);
+                ctx.lineTo(x + 40, y);
+                ctx.stroke();
+                ctx.fillStyle = currentColor;
+                ctx.font = '16px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('T', x, y);
+            }
+
+            function drawCounter(x, y) {
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x - 40, y);
+                ctx.lineTo(x - 25, y);
+                ctx.rect(x - 25, y - 15, 50, 30);
+                ctx.moveTo(x + 25, y);
+                ctx.lineTo(x + 40, y);
+                ctx.stroke();
+                ctx.fillStyle = currentColor;
+                ctx.font = '16px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('C', x, y);
+            }
+
+            function drawRelay(x, y) {
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x - 30, y);
+                ctx.lineTo(x - 15, y);
+                ctx.rect(x - 15, y - 12, 30, 24);
+                ctx.moveTo(x + 15, y);
+                ctx.lineTo(x + 30, y);
+                ctx.stroke();
+            }
+        })();
+    </script>
+</body>
+</html>
